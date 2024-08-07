@@ -113,32 +113,12 @@ def registry_document_main(db_config, config_dict, pdf_path, output_file_path, r
                 column_names = str(row.iloc[4]).strip()
                 main_group_node = str(row.iloc[6]).strip()
                 value_list = row['Value']
-                if len(value_list) == 0:
+                if value_list is not None:
+                    if len(value_list) == 0:
+                        logging.info(f"No value for {field_name} so going to next field")
+                        continue
+                else:
                     logging.info(f"No value for {field_name} so going to next field")
-                    continue
-                if field_name == 'paid_up_capital':
-                    paid_up_capital_dict = {}
-                    for paid_capital_value in value_list:
-                        amount = paid_capital_value['amount']
-                        currency = paid_capital_value['currency']
-                        try:
-                            paid_up_capital_dict[currency] = float(amount)
-                        except:
-                            paid_up_capital_dict[currency] = amount
-                    json_string = json.dumps(paid_up_capital_dict)
-                    logging.info(json_string)
-                    try:
-                        update_database_single_value(db_config, sql_table_name, registration_no_column_name,
-                                                     registration_no,
-                                                     column_names, json_string)
-                    except Exception as e:
-                        logging.error(f"Exception {e} occurred while updating data in dataframe for {sql_table_name} "
-                                      f"with data {paid_up_capital_dict}")
-                        error_count += 1
-                        tb = traceback.extract_tb(e.__traceback__)
-                        for frame in tb:
-                            if frame.filename == __file__:
-                                errors.append(f"Line {frame.lineno}: {frame.line} - {str(e)}")
                     continue
                 table_df = pd.DataFrame(value_list)
                 logging.info(table_df)

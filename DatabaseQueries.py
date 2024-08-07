@@ -417,6 +417,8 @@ def insert_datatable_with_table_director(config_dict, db_config, sql_table_name,
     else:
         if sql_table_name == 'name_history':
             name_column_name = config_dict['name_column_name_in_db_directors']
+        elif sql_table_name == 'auditor':
+            name_column_name = 'auditor_name'
         else:
             raise Exception("Invalid table")
         name = result_dict[name_column_name]

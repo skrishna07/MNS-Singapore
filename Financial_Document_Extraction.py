@@ -131,7 +131,12 @@ def finance_main(db_config, config_dict, pdf_path, registration_no, output_file_
         master_dict["Group"][0]["YYYY-MM-DD"] = str(open_ai_dict)
         master_dict["Company"][0]["YYYY-MM-DD"] = str(open_ai_dict)
         logging.info(master_dict)
-        prompt = config_dict['financial_prompt'] + '\n' + str(master_dict) + '\n' + '\n' + str(config_dict['financial_example_prompt'])
+        if financial_type == 'finance':
+            prompt = config_dict['financial_prompt'] + '\n' + str(master_dict) + '\n' + '\n' + str(config_dict['financial_example_prompt'])
+        elif financial_type == 'pnl':
+            prompt = config_dict['profit_and_loss_prompt'] + '\n' + str(master_dict) + '\n' + '\n' + str(config_dict['financial_example_prompt'])
+        else:
+            raise Exception("No Input financial type provided")
         output = split_openai(extracted_text, prompt)
         try:
             output = re.sub(r'(?<=: ")(\d+(,\d+)*)(?=")', lambda x: x.group(1).replace(",", ""), output)
@@ -164,60 +169,68 @@ def finance_main(db_config, config_dict, pdf_path, registration_no, output_file_
         for key, value in company_output.items():
             company_year_df = main_company_df.copy()
             nature = 'Standalone'
+            financial_value = None
             for index,row in company_year_df.iterrows():
-                field_name = str(row.iloc[0]).strip()
-                main_node = row['main_dict_node']
-                value_type = str(row.iloc[1]).strip()
-                if value_type.lower() == 'straight':
-                    node = row['Node']
-                    if field_name == 'year':
-                        financial_value = key
-                    elif field_name == 'nature':
-                        financial_value = nature
-                    elif field_name == 'Currency':
-                        financial_value = currency
-                    elif field_name == 'filing_type':
-                        financial_value = 'Annual return'
-                    else:
-                        if pd.notna(main_node) and main_node != '' and main_node != 'nan':
-                            financial_value = value[main_node][node]
+                try:
+                    field_name = str(row.iloc[0]).strip()
+                    main_node = row['main_dict_node']
+                    value_type = str(row.iloc[1]).strip()
+                    if value_type.lower() == 'straight':
+                        node = row['Node']
+                        if field_name == 'year':
+                            financial_value = key
+                        elif field_name == 'nature':
+                            financial_value = nature
+                        elif field_name == 'Currency':
+                            financial_value = currency
+                        elif field_name == 'filing_type':
+                            financial_value = 'Annual return'
                         else:
-                            financial_value = value[node]
-                    try:
-                        if field_name != 'year':
-                            financial_value = float(financial_value)
-                    except:
-                        pass
-                    company_year_df.at[index, 'Value'] = financial_value
+                            if pd.notna(main_node) and main_node != '' and main_node != 'nan':
+                                financial_value = value[main_node][node]
+                            else:
+                                financial_value = value[node]
+                        try:
+                            if field_name != 'year':
+                                financial_value = float(financial_value)
+                        except:
+                            pass
+                except:
+                    financial_value = None
+                company_year_df.at[index, 'Value'] = financial_value
             df_list.append(company_year_df)
         for key, value in group_output.items():
             group_year_df = main_group_df.copy()
             nature = 'Consolidated'
+            financial_value = None
             for index,row in group_year_df.iterrows():
-                field_name = str(row.iloc[0]).strip()
-                main_node = row['main_dict_node']
-                value_type = str(row.iloc[1]).strip()
-                if value_type.lower() == 'straight':
-                    node = row['Node']
-                    if field_name == 'year':
-                        financial_value = key
-                    elif field_name == 'nature':
-                        financial_value = nature
-                    elif field_name == 'Currency':
-                        financial_value = currency
-                    elif field_name == 'filing_type':
-                        financial_value = 'Annual return'
-                    else:
-                        if pd.notna(main_node) and main_node != '' and main_node != 'nan':
-                            financial_value = value[main_node][node]
+                try:
+                    field_name = str(row.iloc[0]).strip()
+                    main_node = row['main_dict_node']
+                    value_type = str(row.iloc[1]).strip()
+                    if value_type.lower() == 'straight':
+                        node = row['Node']
+                        if field_name == 'year':
+                            financial_value = key
+                        elif field_name == 'nature':
+                            financial_value = nature
+                        elif field_name == 'Currency':
+                            financial_value = currency
+                        elif field_name == 'filing_type':
+                            financial_value = 'Annual return'
                         else:
-                            financial_value = value[node]
-                    try:
-                        if field_name != 'year':
-                            financial_value = float(financial_value)
-                    except:
-                        pass
-                    group_year_df.at[index, 'Value'] = financial_value
+                            if pd.notna(main_node) and main_node != '' and main_node != 'nan':
+                                financial_value = value[main_node][node]
+                            else:
+                                financial_value = value[node]
+                        try:
+                            if field_name != 'year':
+                                financial_value = float(financial_value)
+                        except:
+                            pass
+                except:
+                    financial_value = None
+                group_year_df.at[index, 'Value'] = financial_value
             df_list.append(group_year_df)
         for i, df in enumerate(df_list):
             formula_df = df[df[df.columns[1]] == config_dict['Formula_Keyword']]
