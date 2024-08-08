@@ -414,6 +414,30 @@ def insert_datatable_with_table_director(config_dict, db_config, sql_table_name,
             logging.info(update_query)
             db_cursor.execute(update_query)
             logging.info(f"Data row values are saved in table '{sql_table_name}' with \n {df_row}")
+    elif sql_table_name == 'paid_up_capital_values':
+        paid_up_capital_column_name = config_dict['paid_up_capital_column_name']
+        paid_up_capital = result_dict[paid_up_capital_column_name]
+        currency_column_name = config_dict['currency_column_name']
+        currency = result_dict[currency_column_name]
+        select_query = (
+            f'SELECT * FROM {sql_table_name} WHERE {registration_column_name} = "{registration_no}" AND {paid_up_capital_column_name}'
+            f' = "{paid_up_capital}" and {currency_column_name} = "{currency}"')
+        logging.info(select_query)
+        db_cursor.execute(select_query)
+        result = db_cursor.fetchall()
+        logging.info(len(result))
+        if len(result) == 0:  # If no matching record found
+            # Insert the record
+            insert_query = f'''
+                           INSERT INTO {sql_table_name}
+                           SET {', '.join([f"{col} = %s" for col in column_names_list])};
+                           '''
+            logging.info(insert_query)
+            logging.info(tuple(df_row.values))
+            db_cursor.execute(insert_query, tuple(df_row.values))
+            # logging.info(f"Data row values are saved in table {sql_table_name} with \n {df_row}")
+        else:
+            logging.info(f"Data row values are already saved in table '{sql_table_name}' with \n {df_row}")
     else:
         if sql_table_name == 'name_history':
             name_column_name = config_dict['name_column_name_in_db_directors']

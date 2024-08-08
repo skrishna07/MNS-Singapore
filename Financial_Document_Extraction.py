@@ -86,13 +86,17 @@ def finance_main(db_config, config_dict, pdf_path, registration_no, output_file_
         else:
             extracted_text = extract_text_from_pdf_with_keyword(pdf_path, header_keywords, field_keywords)
             extracted_text = extracted_text.replace(',', '')
-        if "US$" in extracted_text:
+        currency_dollar_keywords = str(config_dict['currency_dollar_keywords']).split(',')
+        currency_dollar_000_keywords = str(config_dict['currency_dollar_000_keywords']).split(',')
+        currency_SGD_Keywords = str(config_dict['currency_SGD_Keywords']).split(',')
+        currency_SGD_000_Keywords = str(config_dict['currency_SGD_000_Keywords']).split(',')
+        if any(currency_dollar_keyword in extracted_text for currency_dollar_keyword in currency_dollar_keywords):
             currency = 'USD'
-        elif "$ 000" in extracted_text:
+        elif any(currency_dollar_000_keyword in extracted_text for currency_dollar_000_keyword in currency_dollar_000_keywords):
             currency = 'Dollar 000'
-        elif "SGD 000" in extracted_text:
+        elif any(currency_SGD_000_Keyword in extracted_text for currency_SGD_000_Keyword in currency_SGD_000_Keywords):
             currency = 'SGD 000'
-        elif "s$" in extracted_text:
+        elif any(currency_SGD_Keyword in extracted_text for currency_SGD_Keyword in currency_SGD_Keywords):
             currency = 'SGD'
         else:
             currency = 'Null'
