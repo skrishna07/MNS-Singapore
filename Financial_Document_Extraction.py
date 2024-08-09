@@ -98,7 +98,7 @@ def finance_main(db_config, config_dict, pdf_path, registration_no, output_file_
                     combined_text = ""
                     for page_number in range(keyword_page, keyword_page + 2):
                         if page_number in extracted_text_dict:
-                            combined_text += f"Page {page_number}:\n{extracted_text[page_number]}\n"
+                            combined_text += f"Page {page_number}:\n{extracted_text_dict[page_number]}\n"
                     extracted_text = combined_text
                 else:
                     raise Exception(f"No page found when we use headers {','.join(header_keywords)} and fields {','.join(field_keywords)}")
