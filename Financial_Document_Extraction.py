@@ -40,9 +40,9 @@ def find_header_and_next_pages(pdf_path, header_keywords, field_keywords):
         # Combine text from both pages
         combined_text = text1
         combined_text = combined_text.replace(',','')
-        numbers = re.findall(r'\b\d{5,}\b', combined_text)
+        numbers = re.findall(r'\b\d{2,}\b', combined_text)
         # Check if all fields are in the combined text
-        if combined_text and any(header_field in combined_text.lower() for header_field in header_keywords) and any(field in combined_text.lower() for field in field_keywords):
+        if combined_text and any(header_field in combined_text.lower() for header_field in header_keywords) and any(field in combined_text.lower() for field in field_keywords) and len(numbers) >= 5:
             next_page = page_num + 2 if page_num + 2 < num_pages else None
             return page_num, next_page
     return None, None
@@ -84,8 +84,24 @@ def finance_main(db_config, config_dict, pdf_path, registration_no, output_file_
             extracted_text = extracted_text.replace(',', '')
             logging.info(extracted_text)
         else:
-            extracted_text = extract_text_from_pdf_with_keyword(pdf_path, header_keywords, field_keywords)
-            extracted_text = extracted_text.replace(',', '')
+            extracted_text, extracted_text_dict = extract_text_from_pdf_with_keyword(pdf_path, header_keywords, field_keywords)
+            if extracted_text is not None:
+                extracted_text = extracted_text.replace(',', '')
+            else:
+                keyword_page = 0
+                for page_number in sorted(extracted_text_dict.keys()):
+                    numbers = re.findall(r'\b\d{2,}\b', extracted_text_dict[page_number].replace(',', ''))
+                    if any(field_keyword.lower() in extracted_text_dict[page_number].lower() for field_keyword in field_keywords) and len(numbers) >= 5:
+                        keyword_page = page_number
+                        break
+                if keyword_page != 0:
+                    combined_text = ""
+                    for page_number in range(keyword_page, keyword_page + 2):
+                        if page_number in extracted_text:
+                            combined_text += f"Page {page_number}:\n{extracted_text[page_number]}\n"
+                    extracted_text = combined_text
+                else:
+                    raise Exception(f"No page found when we use headers {','.join(header_keywords)} and fields {','.join(field_keywords)}")
         currency_dollar_keywords = str(config_dict['currency_dollar_keywords']).split(',')
         currency_dollar_000_keywords = str(config_dict['currency_dollar_000_keywords']).split(',')
         currency_SGD_Keywords = str(config_dict['currency_SGD_Keywords']).split(',')

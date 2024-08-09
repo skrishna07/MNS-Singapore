@@ -67,21 +67,20 @@ def extract_text_from_pdf_with_keyword(pdf_file_path, header_keywords, field_key
                 break
         keyword_page = 0
         for page_number in sorted(extracted_text.keys()):
-            numbers = re.findall(r'\b\d{5,}\b', extracted_text[page_number].replace(',',''))
-            if any(header_keyword.lower() in extracted_text[page_number].lower() for header_keyword in header_keywords) and any(field_keyword.lower() in extracted_text[page_number].lower() for field_keyword in field_keywords) :
+            numbers = re.findall(r'\b\d{2,}\b', extracted_text[page_number].replace(',', ''))
+            if any(header_keyword.lower() in extracted_text[page_number].lower() for header_keyword in header_keywords) and any(field_keyword.lower() in extracted_text[page_number].lower() for field_keyword in field_keywords) and len(numbers) >= 5:
                 keyword_page = page_number
                 break
-
         if keyword_page != 0:
             combined_text = ""
             for page_number in range(keyword_page, keyword_page + 2):
                 if page_number in extracted_text:
                     combined_text += f"Page {page_number}:\n{extracted_text[page_number]}\n"
-            return combined_text.strip()
+            return combined_text.strip(), extracted_text
         else:
-            print(f"Any of Keyword '{keywords}' not found in the document.")
-            return None
+            print(f"Any of Keyword '{header_keywords}' not found in the document.")
+            return None, extracted_text
     else:
         # Handle the case where the job failed
         print(f"Textract job failed with status: {status}")
-        return None
+        return None, None
