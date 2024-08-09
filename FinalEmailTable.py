@@ -108,6 +108,7 @@ def final_table(db_config, registration_no, database_id):
 
 
 def financials_table(db_config, registration_no):
+    setup_logging()
     try:
         connection = mysql.connector.connect(**db_config)
         cursor = connection.cursor()
@@ -186,5 +187,5 @@ def financials_table(db_config, registration_no):
         # Return the HTML table as a string
         return str(soup)
     except Exception as e:
-        print(f"Exception in generating Fianancials Table {e}")
+        logging.info(f"Exception in generating Fianancials Table {e}")
         return None
