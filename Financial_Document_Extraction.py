@@ -97,7 +97,7 @@ def finance_main(db_config, config_dict, pdf_path, registration_no, output_file_
                 if keyword_page != 0:
                     combined_text = ""
                     for page_number in range(keyword_page, keyword_page + 2):
-                        if page_number in extracted_text:
+                        if page_number in extracted_text_dict:
                             combined_text += f"Page {page_number}:\n{extracted_text[page_number]}\n"
                     extracted_text = combined_text
                 else:
