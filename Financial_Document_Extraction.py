@@ -40,9 +40,9 @@ def find_header_and_next_pages(pdf_path, header_keywords, field_keywords):
         # Combine text from both pages
         combined_text = text1
         combined_text = combined_text.replace(',','')
-        numbers = re.findall(r'\b\d{2,}\b', combined_text)
+        numbers = re.findall(r'\b\d{3,}\b', combined_text)
         # Check if all fields are in the combined text
-        if combined_text and any(header_field in combined_text.lower() for header_field in header_keywords) and any(field in combined_text.lower() for field in field_keywords) and len(numbers) >= 5:
+        if combined_text and any(header_field in combined_text.lower() for header_field in header_keywords) and any(field in combined_text.lower() for field in field_keywords) and len(numbers) >= 10:
             next_page = page_num + 2 if page_num + 2 < num_pages else None
             return page_num, next_page
     return None, None
@@ -90,8 +90,8 @@ def finance_main(db_config, config_dict, pdf_path, registration_no, output_file_
             else:
                 keyword_page = 0
                 for page_number in sorted(extracted_text_dict.keys()):
-                    numbers = re.findall(r'\b\d{2,}\b', extracted_text_dict[page_number].replace(',', ''))
-                    if any(field_keyword.lower() in extracted_text_dict[page_number].lower() for field_keyword in field_keywords) and len(numbers) >= 5:
+                    numbers = re.findall(r'\b\d{3,}\b', extracted_text_dict[page_number].replace(',', ''))
+                    if any(field_keyword.lower() in extracted_text_dict[page_number].lower() for field_keyword in field_keywords) and len(numbers) >= 10:
                         keyword_page = page_number
                         break
                 if keyword_page != 0:

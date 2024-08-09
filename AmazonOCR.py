@@ -67,8 +67,8 @@ def extract_text_from_pdf_with_keyword(pdf_file_path, header_keywords, field_key
                 break
         keyword_page = 0
         for page_number in sorted(extracted_text.keys()):
-            numbers = re.findall(r'\b\d{2,}\b', extracted_text[page_number].replace(',', ''))
-            if any(header_keyword.lower() in extracted_text[page_number].lower() for header_keyword in header_keywords) and any(field_keyword.lower() in extracted_text[page_number].lower() for field_keyword in field_keywords) and len(numbers) >= 5:
+            numbers = re.findall(r'\b\d{3,}\b', extracted_text[page_number].replace(',', ''))
+            if any(header_keyword.lower() in extracted_text[page_number].lower() for header_keyword in header_keywords) and any(field_keyword.lower() in extracted_text[page_number].lower() for field_keyword in field_keywords) and len(numbers) >= 10:
                 keyword_page = page_number
                 break
         if keyword_page != 0:
