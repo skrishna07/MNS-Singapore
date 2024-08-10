@@ -120,6 +120,31 @@ def registry_document_main(db_config, config_dict, pdf_path, output_file_path, r
                 else:
                     logging.info(f"No value for {field_name} so going to next field")
                     continue
+                if field_name == 'total_equity_shares':
+                    total_equity_shares = 0
+                    for value in value_list:
+                        no_of_shares = value['number_of_shares_under_paid_up_capital']
+                        no_of_shares = str(no_of_shares).replace(',', '')
+                        try:
+                            no_of_shares = float(no_of_shares)
+                        except:
+                            pass
+                        total_equity_shares += no_of_shares
+                    json_string = json.dumps(total_equity_shares)
+                    logging.info(json_string)
+                    try:
+                        update_database_single_value(db_config, sql_table_name, registration_no_column_name,
+                                                     registration_no,
+                                                     column_names, json_string)
+                    except Exception as e:
+                        logging.error(f"Exception {e} occurred while updating data in dataframe for {sql_table_name} "
+                                      f"with data {json_string}")
+                        error_count += 1
+                        tb = traceback.extract_tb(e.__traceback__)
+                        for frame in tb:
+                            if frame.filename == __file__:
+                                errors.append(f"Line {frame.lineno}: {frame.line} - {str(e)}")
+                    continue
                 table_df = pd.DataFrame(value_list)
                 logging.info(table_df)
                 column_names_list = column_names.split(',')

@@ -17,6 +17,7 @@ from FinalEmailTable import final_table
 from PercentageHolding import get_percentage_holding
 from AddressSplit import split_address
 from FinalEmailTable import financials_table
+from Holding_Entities import get_holding_entities
 
 
 def data_extraction_and_insertion(db_config, registration_no, config_dict):
@@ -90,6 +91,10 @@ def data_extraction_and_insertion(db_config, registration_no, config_dict):
                     if frame.filename == __file__:
                         errors.append(f"File - {frame.filename},Line {frame.lineno}: {frame.line} - {str(e)}")
         try:
+            get_holding_entities(db_config, registration_no, config_dict)
+        except Exception as e:
+            logging.error(f"Error in fetching holding entities {e}")
+        try:
             split_address(registration_no, config_dict, db_config)
         except Exception as e:
             logging.error(f"Error in splitting address {e}")
@@ -119,6 +124,7 @@ def json_loader_and_tables(db_config, config_excel_path, registration_no, receip
         root_path = config_dict['Root path']
         sheet_name = 'JSON_Loader_SQL_Queries'
         final_email_table = None
+        financial_table = None
         json_loader_status, json_file_path, json_nodes = json_loader(db_config, config_json_file_path, registration_no, root_path, config_excel_path, sheet_name, receipt_no)
         if json_loader_status:
             order_sheet_name = "JSON Non-LLP Order"

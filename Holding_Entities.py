@@ -27,14 +27,14 @@ def get_holding_entities(db_config, registration_no, config_dict):
         connection.close()
         for shareholders in shareholders_result:
             try:
-                full_name = shareholders[2]
+                full_name = shareholders[3]
                 full_name = unicodedata.normalize('NFKD', full_name).encode('ASCII', 'ignore').decode('utf-8')
-                percentage_holding = shareholders[4]
+                percentage_holding = shareholders[5]
                 try:
                     percentage_holding = float(percentage_holding)
                 except:
                     pass
-                cin = shareholders[5]
+                cin = shareholders[6]
                 check_name = check_string(full_name, config_dict)
                 if check_name and percentage_holding > 50:
                     connection = mysql.connector.connect(**db_config)

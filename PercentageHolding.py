@@ -11,16 +11,15 @@ def get_percentage_holding(db_config, registration_no):
         cursor = connection.cursor()
         connection.autocommit = True
         total_paid_up_capital = 0
-        paid_up_capital_query = f"select * from paid_up_capital_values where registration_no = '{registration_no}'"
+        paid_up_capital_query = f"select total_equity_shares from shareholdings_summary where registration_no = '{registration_no}'"
         logging.info(paid_up_capital_query)
         cursor.execute(paid_up_capital_query)
-        paid_up_capitals = cursor.fetchall()
-        for paid_up_capital in paid_up_capitals:
-            try:
-                paid_up_capital = float(paid_up_capital[2])
-            except:
-                pass
-            total_paid_up_capital += paid_up_capital
+        paid_up_capital = cursor.fetchone()[0]
+        paid_up_capital = str(paid_up_capital).replace(',', '')
+        try:
+            total_paid_up_capital = float(paid_up_capital)
+        except:
+            total_paid_up_capital = paid_up_capital
         logging.info(total_paid_up_capital)
         shareholders_query = f"Select * from current_shareholdings where registration_no = '{registration_no}'"
         cursor.execute(shareholders_query)
