@@ -218,9 +218,10 @@ def finance_main(db_config, config_dict, pdf_path, registration_no, output_file_
                         try:
                             if financial_type == 'pnl':
                                 if field_name == 'income_tax_expense' or field_name == 'income_tax_expenses' or field_name == 'Income_tax' or field_name == 'tax_benefit_expense' or field_name == 'income_tax_benefit_expense' or field_name == 'tax_expense' or field_name == 'taxation' or field_name == 'income_tax_credit_expense':
+                                    financial_value = float(financial_value)
                                     financial_value = -financial_value
                                 else:
-                                    if isinstance(value, (int, float)) and value < 0:
+                                    if isinstance(financial_value, (int, float)) and financial_value < 0:
                                         financial_value = -financial_value
                         except:
                             pass
