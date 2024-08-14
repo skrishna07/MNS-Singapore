@@ -154,7 +154,7 @@ def finance_main(db_config, config_dict, pdf_path, registration_no, output_file_
         if financial_type == 'finance':
             prompt = config_dict['financial_prompt'] + '\n' + str(master_dict) + '\n' + '\n' + str(config_dict['financial_example_prompt'])
         elif financial_type == 'pnl':
-            prompt = config_dict['profit_and_loss_prompt'] + '\n' + str(master_dict) + '\n' + '\n' + str(config_dict['financial_example_prompt']) + '\n' + '\n' + str(config_dict['pnl_note_prompt'])
+            prompt = config_dict['profit_and_loss_prompt'] + '\n' + str(master_dict) + '\n' + '\n' + str(config_dict['financial_example_prompt'])
         else:
             raise Exception("No Input financial type provided")
         output = split_openai(extracted_text, prompt)
