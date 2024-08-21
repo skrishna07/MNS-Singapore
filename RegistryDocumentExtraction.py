@@ -123,13 +123,13 @@ def registry_document_main(db_config, config_dict, pdf_path, output_file_path, r
                 if field_name == 'total_equity_shares':
                     total_equity_shares = 0
                     for value in value_list:
-                        no_of_shares = value['number_of_shares_under_paid_up_capital']
-                        no_of_shares = str(no_of_shares).replace(',', '')
                         try:
+                            no_of_shares = value['number_of_shares_under_paid_up_capital']
+                            no_of_shares = str(no_of_shares).replace(',', '')
                             no_of_shares = float(no_of_shares)
+                            total_equity_shares += no_of_shares
                         except:
-                            pass
-                        total_equity_shares += no_of_shares
+                            continue
                     json_string = json.dumps(total_equity_shares)
                     logging.info(json_string)
                     try:
