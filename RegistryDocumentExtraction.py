@@ -10,6 +10,7 @@ from DatabaseQueries import get_db_credentials
 from DatabaseQueries import update_database_single_value_with_one_column_check
 from DatabaseQueries import update_database_single_value
 from DatabaseQueries import insert_datatable_with_table_director
+from ExtractReadablePDF import extract_text_from_readable_pdf
 import traceback
 from datetime import datetime
 
@@ -52,7 +53,7 @@ def registry_document_main(db_config, config_dict, pdf_path, output_file_path, r
             main_node = row['main_dict_node']
             sub_list = {main_node: [sub_dict]}
             open_ai_dict.update(sub_list)
-        pdf_text = extract_text_from_pdf(pdf_path)
+        pdf_text = extract_text_from_readable_pdf(pdf_path)
         form10_prompt = config_dict['common_prompt'] + '\n' + str(open_ai_dict)
         output = split_openai(pdf_text, form10_prompt)
         output = remove_text_before_marker(output, "```json")
