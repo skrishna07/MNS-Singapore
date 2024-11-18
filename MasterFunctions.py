@@ -144,6 +144,6 @@ def json_loader_and_tables(db_config, config_excel_path, registration_no, receip
         for frame in tb:
             if frame.filename == __file__:
                 errors.append(f"File {frame.filename},Line {frame.lineno}: {frame.line} - {str(e)}")
-        raise Exception(errors)
+        raise Exception("\n".join(errors))
     else:
         return True, final_email_table, json_file_path, financial_table
