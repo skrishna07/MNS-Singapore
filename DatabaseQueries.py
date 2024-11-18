@@ -14,7 +14,7 @@ def fetch_orders_to_extract_data(db_config):
         connection = mysql.connector.connect(**db_config)
         cursor = connection.cursor()
         connection.autocommit = True
-        pending_order_query = "select receipt_no,registration_no,company_name,id,workflow_status from orders where process_status = 'InProgress' and LOWER(workflow_status) in ('extraction_pending','loader_pending')"
+        pending_order_query = "select receipt_no,registration_no,company_name,id,workflow_status,receipt_no_for_document_download from orders where process_status = 'InProgress' and LOWER(workflow_status) in ('extraction_pending','loader_pending')"
         logging.info(pending_order_query)
         cursor.execute(pending_order_query)
         pending_order_results = cursor.fetchall()
