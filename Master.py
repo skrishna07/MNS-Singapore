@@ -50,6 +50,7 @@ def main():
                         registration_no = pending_order[1]
                         company_name = pending_order[2]
                         workflow_status = pending_order[4]
+                        Download_code=pending_order[5]
                         if str(workflow_status).lower() == 'extraction_pending':
                             data_extraction = data_extraction_and_insertion(db_config, registration_no, config_dict)
                             if data_extraction:
@@ -57,7 +58,7 @@ def main():
                                 update_workflow_status(db_config, database_id, 'Loader_pending')
                                 update_locked_by_empty(db_config, database_id)
                         if str(workflow_status).lower() == 'loader_pending':
-                            loader_status, final_email_table, json_file_path, financial_table = json_loader_and_tables(db_config, excel_file, registration_no, receipt_no, config_dict, database_id)
+                            loader_status, final_email_table, json_file_path, financial_table,tags_table = json_loader_and_tables(db_config, excel_file, registration_no, receipt_no, config_dict, database_id)
                             if loader_status:
                                 logging.info(f"Successfully extracted JSON Loader for reg no - {registration_no}")
                                 update_workflow_status(db_config, database_id, 'Loader_generated')
@@ -68,8 +69,8 @@ def main():
                                 completed_subject = str(config_dict['cin_Completed_subject']).format(registration_no,
                                                                                                      receipt_no)
                                 completed_body = str(config_dict['cin_Completed_body']).format(registration_no,
-                                                                                               receipt_no, company_name,
-                                                                                               final_email_table, financial_table, system_name)
+                                                                                               receipt_no, company_name,Download_code,
+                                                                                               final_email_table, financial_table,tags_table, system_name)
                                 business_mails = str(config_dict['business_mail']).split(',')
                                 attachments.append(json_file_path)
                                 attachments.append(transactional_log_file_path)
