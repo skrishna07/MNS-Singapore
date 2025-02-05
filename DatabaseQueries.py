@@ -776,3 +776,154 @@ def update_end_time(db_config, registration_no, database_id):
         connection.close()
     except Exception as e:
         logging.info(f"Error updating end time {e}")
+
+def get_split_pdf_path(db_config, registration_no, database_id):
+    setup_logging()
+    connection = mysql.connector.connect(**db_config)
+    cursor = connection.cursor()
+    try:
+        query = (
+            f"SELECT split_status, split_pdf_path, pdf_to_excel_conversion_status,excel_path "  
+            f"FROM documents WHERE registration_no = '{registration_no}' AND id = {database_id}"
+        )
+        logging.info(query)
+        cursor.execute(query)
+        result = cursor.fetchone()
+
+        if result:
+            split_status = result[0]  # Assign split_status
+            split_pdf_path = result[1]  # Assign split_pdf_path
+            pdf_to_excel_conversion_status = result[2]  # Assign pdf_to_excel_conversion_status
+            excel_file_path = result[3]
+
+            logging.info(f"Fetched values - split_status: {split_status}, split_pdf_path: {split_pdf_path}, "
+                         f"pdf_to_excel_conversion_status: {pdf_to_excel_conversion_status}")
+            return split_status,split_pdf_path,pdf_to_excel_conversion_status,excel_file_path
+        else:
+            logging.info("No record found for the given registration_no and database_id.")
+            return None
+    except Exception as e:
+        logging.error(f"Exception occurred while fetching document status: {e}")
+        return None
+    finally:
+        cursor.close()
+        connection.close()
+
+def get_split_status(db_config, registration_no, database_id):
+    setup_logging()
+    connection = mysql.connector.connect(**db_config)
+    cursor = connection.cursor()
+    try:
+        split_status_query = f"select split_status from documents where registration_no = '{registration_no}' and id = {database_id}"
+        logging.info(split_status_query)
+        cursor.execute(split_status_query)
+        result = cursor.fetchone()[0]
+        logging.info(f"Retry count {result}")
+        return result
+    except Exception as e:
+        logging.info(f"Exception occurred while updating retry counter by {e}")
+        return None
+    finally:
+        cursor.close()
+        connection.close()
+
+def update_split_status_and_split_pdf_path(db_config, registration_no, database_id, split_pdf_path):
+    setup_logging()
+    connection = mysql.connector.connect(**db_config)
+    cursor = connection.cursor()
+    try:
+        update_split_status_path__query = f"UPDATE documents SET split_status = 'Y', split_pdf_path = '{split_pdf_path}' WHERE registration_no = '{registration_no}' AND id = {database_id}"
+        logging.info(update_split_status_path__query)
+        cursor.execute(update_split_status_path__query)
+        connection.commit()
+    except Exception as e:
+        print(f"Exception occurred while updating retry counter by {e}")
+    finally:
+        cursor.close()
+        connection.close()
+
+def update_excel_status_and_path(db_config, registration_no, database_id, excel_path):
+    """
+    Update pdf_to_excel_conversion_status to 'Y' and set the excel_path in the documents table.
+    """
+    setup_logging()
+    connection = mysql.connector.connect(**db_config)
+    cursor = connection.cursor()
+    try:
+        # Update pdf_to_excel_conversion_status to 'Y' and set the excel_path
+        update_query = (
+            f"UPDATE documents SET pdf_to_excel_conversion_status = 'Y', excel_path = '{excel_path}' "
+            f"WHERE registration_no = '{registration_no}' AND id = {database_id}"
+        )
+        logging.info(update_query)
+        cursor.execute(update_query)
+        connection.commit()  # Commit the update
+
+        logging.info(f"Updated pdf_to_excel_conversion_status to 'Y' and excel_path to {excel_path}")
+        return True  # Return True to indicate the update was successful
+    except Exception as e:
+        logging.error(f"Exception occurred while updating document status: {e}")
+        return False  # Return False if an error occurred
+    finally:
+        cursor.close()
+        connection.close()
+
+def insert_new_tags(db_config, registration_no, database_id, all_tags_data, column_name):
+    setup_logging()
+    connection = mysql.connector.connect(**db_config)
+    cursor = connection.cursor()
+    try:
+        # Ensure all_tags_data is a string or serialize it to JSON if needed
+        if isinstance(all_tags_data, (list, dict)):
+            all_tags_data = json.dumps(all_tags_data)  # Convert to JSON if it's a list or dictionary
+
+            all_tags_data_safe = f"'{all_tags_data}'"if all_tags_data else "NULL"
+
+            # Create the dynamic update query
+            update_query = (
+                    f"UPDATE documents SET {column_name} = {all_tags_data_safe} "
+                    f"WHERE registration_no = '{registration_no}' AND category = 'Financial_File'"
+                )
+
+        logging.info(update_query)
+        cursor.execute(update_query)
+        connection.commit()
+        logging.info(f"Updated {column_name} with new tags.")
+        return True  # Return True to indicate the update was successful
+    except Exception as e:
+        logging.error(f"Exception occurred while updating {column_name}: {e}")
+        return False  # Return False if an error occurred
+    finally:
+        cursor.close()
+        connection.close()
+def get_new_tags(db_config, registration_no, database_id):
+    setup_logging()
+    connection = mysql.connector.connect(**db_config)
+    cursor = connection.cursor()
+    try:
+        # Create the SELECT query
+        query = (
+            f"SELECT finance_new_tags, pnl_new_tags "
+            f"FROM documents WHERE registration_no = '{registration_no}' AND id = {database_id}"
+        )
+        logging.info(f"Executing query: {query}")
+        cursor.execute(query)
+        result = cursor.fetchone()
+
+        # If data is found, return the two columns; otherwise, return None for both
+        if result:
+            finance_new_tags = result[0]  # finance_new_tags from the query result
+            pnl_new_tags = result[1]      # pnl_new_tags from the query result
+            logging.info(f"Retrieved tags: finance_new_tags={finance_new_tags}, pnl_new_tags={pnl_new_tags}")
+            return finance_new_tags, pnl_new_tags
+        else:
+            logging.warning(f"No data found for registration_no={registration_no} and id={database_id}")
+            return None, None  # Return None if no data is found
+
+    except Exception as e:
+        logging.error(f"Exception occurred while retrieving new tags: {e}")
+        return None, None  # Return None if an error occurred
+
+    finally:
+        cursor.close()
+        connection.close()

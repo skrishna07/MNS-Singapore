@@ -12,6 +12,14 @@ import json
 from DatabaseQueries import update_database_single_value_financial
 from DatabaseQueries import get_db_credentials
 import PyPDF2
+from Azure_Document_Intelligence_Studio import azure_pdf_to_excel_conversion
+# from tes import italian_mapping_and_comp
+from pathlib import Path
+from DatabaseQueries import get_split_pdf_path
+from DatabaseQueries import insert_new_tags
+# from Italian_mapping_and_comparison_new_tags_included import italian_mapping_and_comp
+# from newwww import australia_mapping_and_comp
+from Singapore_mapping_and_comparison import Singapore_mapping_and_comp
 
 
 def remove_text_before_marker(text, marker):
@@ -64,7 +72,7 @@ def split_pdf(file_path, start_page, end_page, output_path):
         raise Exception(e)
 
 
-def finance_main(db_config, config_dict, pdf_path, registration_no, output_file_path, financial_type, temp_pdf_path):
+def finance_main(db_config, config_dict, pdf_path, registration_no, output_file_path, financial_type, temp_pdf_path,database_id):
     setup_logging()
     error_count = 0
     errors = []
@@ -169,18 +177,102 @@ def finance_main(db_config, config_dict, pdf_path, registration_no, output_file_
             output = eval(output)
         except:
             output = json.loads(output)
+
+        def convert_keys_to_lowercase(data):
+            if isinstance(data, dict):
+                return {key.lower(): convert_keys_to_lowercase(value) for key, value in data.items()}
+            elif isinstance(data, list):
+                return [convert_keys_to_lowercase(item) for item in data]
+            else:
+                return data
+
+        output = convert_keys_to_lowercase(output)
+        logging.info(json.dumps(output, indent=4))
+        if financial_type == 'finance':
+            output_directory = os.path.dirname(pdf_path)  # Get the directory of the PDF file
+
+            # Define the JSON file name and path
+            open_ai_json_file_path = os.path.join(output_directory, "open_ai_finance.json")
+
+            # Save the processed output to the JSON file
+            with open(open_ai_json_file_path, 'w') as json_file:
+                json.dump(output, json_file, indent=4)
+            print(f"Processed output saved to {open_ai_json_file_path}")
+        elif financial_type == 'pnl':
+            output_directory = os.path.dirname(pdf_path)  # Get the directory of the PDF file
+
+            # Define the JSON file name and path
+            open_ai_json_file_path = os.path.join(output_directory, "open_ai_pnl.json")
+
+            # Save the processed output to the JSON file
+            with open(open_ai_json_file_path, 'w') as json_file:
+                json.dump(output, json_file, indent=4)
+            print(f"Processed output saved to {open_ai_json_file_path}")
+        else:
+            raise ValueError("Invalid financial_type. Expected 'finance' or 'pnl'.")
+
+        # Call get_split_status function after obtaining output
+        split_status, split_pdf_path, pdf_to_excel_conversion_status, excel_file_path = get_split_pdf_path(db_config, registration_no,database_id)
+        # Log the results from get_split_status
+        logging.info(f"Fetched split_status: {split_status}, split_pdf_path: {split_pdf_path}, pdf_to_excel_conversion_status: {pdf_to_excel_conversion_status}, excel_path: {excel_file_path}")
+        if str(pdf_to_excel_conversion_status).lower() != 'y' and (excel_file_path == '' or excel_file_path is None):
+            # Example usage
+            print("split_pdf_path",split_pdf_path)
+            excel_file_path = os.path.splitext(split_pdf_path)[0] + '.xlsx'
+            # Standardize the path using pathlib (optional, but more robust)
+            excel_file_path = Path(excel_file_path).as_posix()  # Converts to use forward slashes
+            output_directory = os.path.dirname(excel_file_path)
+            print("output_directory",output_directory)
+            table_dataframes = azure_pdf_to_excel_conversion(split_pdf_path, excel_file_path)
+            if table_dataframes:
+                print(f"DataFrames have been written to {excel_file_path}")
+                print("Excel_file_path_1", excel_file_path)
+                # translation_status = get_translation_status(db_config, registration_no, database_id)
+                if financial_type == 'finance':
+                    json_file_path = os.path.splitext(excel_file_path)[0] + "_finance.json"
+                    is_pnl=False
+                elif financial_type == 'pnl':
+                    json_file_path = os.path.splitext(excel_file_path)[0] + "_pnl.json"
+                    is_pnl = True
+                else:
+                    raise ValueError("Invalid financial_type. Expected 'finance' or 'pnl'.")
+                output, all_tags_data = Singapore_mapping_and_comp(output, excel_file_path, config_file_path,
+                                                                 json_file_path, is_pnl)
+                print("all latest tag ",all_tags_data)
+                if not is_pnl:
+                    insert_new_tags(db_config, registration_no, database_id, all_tags_data,
+                                    column_name='finance_new_tags')
+                else:
+                    insert_new_tags(db_config, registration_no, database_id, all_tags_data, column_name='pnl_new_tags')
+        else:
+            if financial_type == 'finance':
+                json_file_path = os.path.splitext(excel_file_path)[0] + "_finance.json"
+                is_pnl = False
+            elif financial_type == 'pnl':
+                json_file_path = os.path.splitext(excel_file_path)[0] + "_pnl.json"
+                is_pnl = True
+            else:
+                raise ValueError("Invalid financial_type. Expected 'finance' or 'pnl'.")
+            # Call the italian functionaustralia_mapping_and_comp
+            output,all_tags_data = Singapore_mapping_and_comp(output, excel_file_path, config_file_path, json_file_path, is_pnl)
+            if not is_pnl:
+                insert_new_tags(db_config, registration_no, database_id, all_tags_data, column_name='finance_new_tags')
+            else:
+                insert_new_tags(db_config, registration_no, database_id, all_tags_data, column_name='pnl_new_tags')
+
+            logging.info("No tables found so proceeding with the Open AI Output")
         try:
             # Handle Group Output
-            if len(output["Group"]) != 0:
+            if len(output["group"]) != 0:
                 # If the first structure is detected (list of dictionaries per year)
-                if isinstance(output["Group"][0], dict):
+                if isinstance(output["group"][0], dict):
                     # For first structure where years are inside dictionaries
                     group_output = {}
-                    for item in output["Group"]:
+                    for item in output["group"]:
                         group_output.update(item)
                 else:
                     # For second structure where years are keys within the first dictionary
-                    group_output = output["Group"][0]
+                    group_output = output["group"][0]
             else:
                 group_output = {}
         except:
@@ -188,16 +280,16 @@ def finance_main(db_config, config_dict, pdf_path, registration_no, output_file_
 
         try:
             # Handle Company Output
-            if len(output["Company"]) != 0:
+            if len(output["company"]) != 0:
                 # If the first structure is detected (list of dictionaries per year)
-                if isinstance(output["Company"][0], dict):
+                if isinstance(output["company"][0], dict):
                     # For first structure where years are inside dictionaries
                     company_output = {}
-                    for item in output["Company"]:
+                    for item in output["company"]:
                         company_output.update(item)
                 else:
                     # For second structure where years are keys within the first dictionary
-                    company_output = output["Company"][0]
+                    company_output = output["company"][0]
             else:
                 company_output = {}
         except:
@@ -225,6 +317,8 @@ def finance_main(db_config, config_dict, pdf_path, registration_no, output_file_
                         elif field_name == 'filing_type':
                             financial_value = 'Annual return'
                         else:
+                            node = str(node).lower()
+                            main_node=str(main_node).lower()
                             if pd.notna(main_node) and main_node != '' and main_node != 'nan':
                                 financial_value = value[main_node][node]
                             else:
@@ -268,6 +362,8 @@ def finance_main(db_config, config_dict, pdf_path, registration_no, output_file_
                         elif field_name == 'filing_type':
                             financial_value = 'Annual return'
                         else:
+                            node = str(node).lower()
+                            main_node=str(main_node).lower()
                             if pd.notna(main_node) and main_node != '' and main_node != 'nan':
                                 financial_value = value[main_node][node]
                             else:
@@ -308,6 +404,7 @@ def finance_main(db_config, config_dict, pdf_path, registration_no, output_file_
                         else:
                             replacement_value = str(
                                 df[df['Field_Name'] == field_name]['Value'].values[0])
+                        replacement_value = replacement_value.replace(',', '')
                         replacement_value = str(replacement_value) if replacement_value != '' else '0'
                         company_formula = re.sub(pattern, replacement_value,company_formula)
                     except Exception as e:
