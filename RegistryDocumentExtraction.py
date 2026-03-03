@@ -13,6 +13,7 @@ from DatabaseQueries import insert_datatable_with_table_director
 from ExtractReadablePDF import extract_text_from_readable_pdf
 import traceback
 from datetime import datetime
+import re
 
 
 def remove_text_before_marker(text, marker):
@@ -59,10 +60,12 @@ def registry_document_main(db_config, config_dict, pdf_path, output_file_path, r
         output = remove_text_before_marker(output, "```json")
         output = remove_string(output, "```")
         logging.info(output)
+        
         try:
             output = eval(output)
         except:
-            output = json.loads(output)
+            output = json.loads(output) 
+
         for index, row in df_map.iterrows():
             dict_node = str(row.iloc[2]).strip()
             type = str(row.iloc[1]).strip()

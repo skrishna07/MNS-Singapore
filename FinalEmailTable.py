@@ -151,7 +151,8 @@ def financials_table(db_config, registration_no):
             subtotals = result[14]
             pnl_items = result[15]
             subtotals_dict = json.loads(subtotals)
-            pnl_dict = json.loads(pnl_items)
+            if pnl_items is not None:
+               pnl_dict = json.loads(pnl_items)
             try:
                 assets_difference = subtotals_dict['diffrence_value_of_assets']
             except:

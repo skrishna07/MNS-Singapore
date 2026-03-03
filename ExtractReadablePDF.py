@@ -13,7 +13,7 @@ def extract_text_from_readable_pdf(pdf_path):
             if tables:
                 for table in tables:
                     for row in table:
-                        full_text.append("\t".join(row))
+                        full_text.append("\t".join([str(item) if item is not None else "" for item in row]))
                     full_text.append("")  # Add a new line after each table
 
             # Extract text

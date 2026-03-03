@@ -415,6 +415,9 @@ def Singapore_mapping_and_comp(output, excel_file_path, config_file_path, json_f
         # print(f"main_dict_node {main_dict_node} and nodes_list {node_list}")
         row_end = None
         row_start = None
+
+        #row_start = 0
+        #row_end = len(excel_data_frame)
         new_tags_list = []
         new_tags_dict = {}
         standalone_synonyms = ["Economic Entity"]
@@ -462,6 +465,7 @@ def Singapore_mapping_and_comp(output, excel_file_path, config_file_path, json_f
             # Step 1: Find the indices of the fields in `fields_data`
             fields_data = [str(field).lower().strip() if isinstance(field, str) else str(field) for field in fields_data]
             indices = [i for i, field in enumerate(fields_data) if field in fields_to_ignore]
+            fields_data_new = None
             if indices:
                 # Step 2: Update row_start and row_end based on the first and last indices
                 row_start = indices[0]
@@ -472,7 +476,9 @@ def Singapore_mapping_and_comp(output, excel_file_path, config_file_path, json_f
                 # Step 3: Delete data within row_start and row_end and store the remaining data
                 fields_data_new = list(fields_data[:row_start]) + list(fields_data[row_end:])
                 print("Updated fields_data:", fields_data_new)
-
+    
+            
+            
             # Initialize the final dictionary before the loop
             final_tags_dict = {'PnL': []}
             fields_to_ignore_1 = ['euro', '$', 'economic entity', 'parent entity', 'nan']
@@ -970,6 +976,8 @@ def Singapore_mapping_and_comp(output, excel_file_path, config_file_path, json_f
                     # Print the final list of all tags data
                     print("All tags data:", all_tags_data)
                 # remove_nodes_from_openai_data(output, main_dict_node, excel_nodes_list)
+        
+            
         return all_tags_data
     for entity in output.keys():
         # Check if the entity has data
@@ -1181,53 +1189,11 @@ def Singapore_mapping_and_comp(output, excel_file_path, config_file_path, json_f
                     pnl_headers, pnl_fields_list,
                     pnl_ignore_headers, None, is_pnl=True, all_tags_data = None)
 
+                           
     # Save updated output to JSON after processing all sheets
     with open(json_file_path, 'w') as json_file:
         json.dump(output, json_file, indent=4)
 
     print(f"Updated data saved to {json_file_path}")
+
     return output, all_tags_data
-
-
-# # Example data
-# output = {
-#     "group": [],
-#     "company": [
-#         {
-#             "2022-03-31": {
-#                 "non-current assets": {
-#                     "plant and equipment": 43662.0,
-#                     "investment in subsidiaries": 3733932.0,
-#                     "right-of-use assets": 92512.0,
-#                     "loan to a subsidiary": 200000.0
-#                 },
-#                 "current assets": {
-#                     "inventories": 768144.0,
-#                     "trade and other receivables": 1279841.0,
-#                     "prepayments": 8286.0,
-#                     "cash and cash equivalents": 10392717.0,
-#                     "loan to a subsidiary": 150000.0
-#                 },
-#                 "non-current liabilities": {
-#                     "deferred tax liabilities": 4906.0,
-#                     "lease liabilities": 5217.0
-#                 },
-#                 "current liabilities": {
-#                     "trade and other payables": 3923312.0,
-#                     "contract liabilities": 49406.0,
-#                     "income tax payables": 201091.0,
-#                     "lease liabilities": 79578.0
-#                 },
-#                 "total equity": 12405584.0,
-#                 "share capital": 3382135.0,
-#                 "unappropriated profits": 9023449.0
-#             }
-#         }
-#     ]
-# }
-#
-# is_pnl = True
-# excel_file_path = r"C:\Users\BRADSOL\Downloads\Singapore New tags\Financial Lot 3\Ushio Asia Pacific Pte L\split_Ushio Asia Pacific Pte L.xlsx"
-# config_file_path = r"C:\Users\BRADSOL\Documents\GitHub\MNS-Singapore\Config\Singapore_Financial_Config.xlsx"
-# json_file_path = r"C:\Users\BRADSOL\Downloads\Singapore New tags\Financial Lot 3\Ushio Asia Pacific Pte L\split_Ushio Asia Pacific Pte L.json"
-# print(australia_mapping_and_comp(output, excel_file_path, config_file_path, json_file_path, is_pnl))
