@@ -41,7 +41,7 @@ def find_header_and_next_pages(pdf_path, header_keywords, field_keywords):
     pdf_reader = PyPDF2.PdfReader(pdf_file)
     num_pages = len(pdf_reader.pages)
     # Search for the header in the PDF
-    for page_num in range(0, num_pages):
+    for page_num in range(7, num_pages):
         # Read the current page and the next page
         page1 = pdf_reader.pages[page_num]
         text1 = page1.extract_text()
@@ -238,6 +238,12 @@ def finance_main(db_config, config_dict, pdf_path, registration_no, output_file_
                     raise ValueError("Invalid financial_type. Expected 'finance' or 'pnl'.")
                 output, all_tags_data = Singapore_mapping_and_comp(output, excel_file_path, config_file_path,
                                                                  json_file_path, is_pnl)
+
+                if all_tags_data is None:
+                  all_tags_data = []
+
+                if output is None:
+                  output = {}
                 print("all latest tag ",all_tags_data)
                 if not is_pnl:
                     insert_new_tags(db_config, registration_no, database_id, all_tags_data,
@@ -255,6 +261,11 @@ def finance_main(db_config, config_dict, pdf_path, registration_no, output_file_
                 raise ValueError("Invalid financial_type. Expected 'finance' or 'pnl'.")
             # Call the italian functionaustralia_mapping_and_comp
             output,all_tags_data = Singapore_mapping_and_comp(output, excel_file_path, config_file_path, json_file_path, is_pnl)
+            if all_tags_data is None:
+              all_tags_data = []
+
+            if output is None:
+              output = {}
             if not is_pnl:
                 insert_new_tags(db_config, registration_no, database_id, all_tags_data, column_name='finance_new_tags')
             else:
