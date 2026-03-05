@@ -73,8 +73,8 @@ def new_tags_table(db_config, registration_no, database_id):
         if tags_result:
             logging.info("Tags fetched from the database successfully.")
 
-            finance_new_tags = json.loads(tags_result[0])
-            pnl_new_tags = json.loads(tags_result[1])
+            finance_new_tags = json.loads(tags_result[0]) if tags_result[0] else []
+            pnl_new_tags = json.loads(tags_result[1]) if tags_result[1] else []
 
             # Process tags dynamically
             assets_tags, liabilities_tags, equity_tags, processed_pnl_new_tags = process_tags(finance_new_tags,
